@@ -11,8 +11,8 @@ public class AIController : MonoBehaviour
     public AIController_Perception Perception;
     public AIController_Attack Attacks;
 
-    [HideInInspector] public Enemy EnemyEntity;
-    [HideInInspector] public Player MainTargetEntity;
+    //[HideInInspector] public Enemy EnemyEntity;
+    //[HideInInspector] public Player MainTargetEntity;
     public List<Entity> Targetables;
 
     // values:
@@ -24,14 +24,6 @@ public class AIController : MonoBehaviour
 
     private void Awake()
     {
-        // controller'in bulunduðu enemy:
-        EnemyEntity = GetComponent<Enemy>();
-
-        // hedef seçimi:
-        MainTargetEntity = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
-        if (Targetables == null) Targetables = new List<Entity>();
-        Targetables.Add(MainTargetEntity);
-
         NullCheck();
 
         Wait = new WaitForSeconds(AIUpdateWaitInterval);
@@ -86,9 +78,7 @@ public class AIController : MonoBehaviour
 
     public virtual void NullCheck()
     {
-        if (EnemyEntity == null) throw new System.Exception("AIController can not find the Enemy script");
         if (Agent == null) throw new System.Exception("AIController can not find the nav mesh agent");
-        if (MainTargetEntity == null) throw new System.Exception("AIController can not find target");
         if (Attacks == null) throw new System.Exception("AIControllerr can not find any attack class");
         if (Perception == null) throw new System.Exception("AIController can not find any Perception class");
         if (Movement == null) throw new System.Exception("AIController can not find any Movement class");
