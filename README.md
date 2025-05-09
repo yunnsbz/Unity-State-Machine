@@ -31,7 +31,7 @@ The project's core file structure is as follows:
 
 
 ## Installation
-1. **Unity Version:** The project has been tested with Unity 2021.3 or later.
+1. **Unity Version:** The project has been tested with Unity 2021.3.
 2. **Clone the Repository:**
    ```bash
    https://github.com/yunnsbz/Unity-State-Machine.git
