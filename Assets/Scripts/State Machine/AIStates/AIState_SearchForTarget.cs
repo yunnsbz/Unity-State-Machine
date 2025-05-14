@@ -14,7 +14,7 @@ public class AIState_SearchForTarget : AIState
     {
         controller.Perception.StartSearchForTarget();
         // eðer hedefin son konumu biliniyorsa oraya gitsin
-        controller.Movement.StartInvestigateTarget(controller.Perception.TargetlastSeenPosition);
+        controller.Movement.StartInvestigateTarget(controller.Perception.TargetlastKnownPosition);
         IsInvestigting = true;
     }
 

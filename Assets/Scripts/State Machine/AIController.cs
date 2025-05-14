@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
+/// <summary>
+/// This is the main class to be used for AI State Machine logic.
+/// It handles initialization, state updates, and AI behavior flow.
+/// </summary>
 public class AIController : MonoBehaviour
 {
     // components:
@@ -11,8 +15,7 @@ public class AIController : MonoBehaviour
     public AIController_Perception Perception;
     public AIController_Attack Attacks;
 
-    //[HideInInspector] public Enemy EnemyEntity;
-    //[HideInInspector] public Player MainTargetEntity;
+    // List of all targetable entities within perception range
     public List<Entity> Targetables;
 
     // values:
@@ -45,7 +48,7 @@ public class AIController : MonoBehaviour
         yield break;
     }
 
-    // düþman hemen aktif olmamalý diðer sistemleri beklemeli
+    // Enemy should not be active immediately — wait for other systems to initialize
     protected virtual IEnumerator ActivateBehaviour()
     {
         yield return null;
@@ -105,7 +108,7 @@ public class AIController : MonoBehaviour
             //}
             Gizmos.color = Color.red;
 
-            // Sol ve sað ray yönlerini hesapla
+            // Calculate the left and right directions for view angle
             Quaternion leftRotation = Quaternion.AngleAxis(-Perception.ForwardViewAngle / 2, Vector3.up);
             Quaternion rightRotation = Quaternion.AngleAxis(Perception.ForwardViewAngle / 2, Vector3.up);
 
@@ -114,19 +117,20 @@ public class AIController : MonoBehaviour
 
             float distance = Perception.MaxVisualPerceptionDistance;
 
-            // hedefi gördüyse görüþ mesafesi artar
+            // If the enemy is in "Take Range" state (if they see the target), increase the perception distance
             if (stateMachine.currentState is AIState_TakeRange) distance = Perception.MaxVisualPerceptionDistance * 2;
 
-            // Raylarý çiz
+            // Draw view angle rays
             Gizmos.DrawRay(transform.position, leftRayDirection * distance);
             Gizmos.DrawRay(transform.position, rightRayDirection * distance);
 
+            // Draw a visual arc for the AI's field of view
             DrawViewArc(transform.position, transform.forward, Perception.ForwardViewAngle, distance);
         }
 
     }
 
-    // Görüþ alanýný yay þeklinde çizen yardýmcý fonksiyon
+    // Helper function to draw an arc representing the AI's field of view
     private void DrawViewArc(Vector3 position, Vector3 forward, float angle, float distance)
     {
         int segments = 20; // Yayýn segment sayýsý

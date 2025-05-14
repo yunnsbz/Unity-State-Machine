@@ -407,6 +407,7 @@ MonoBehaviour:
   RangeMinDistance: 8
   RangeMaxDistance: 15
   RandomPatrolRadius: 9
+  PatrolWaitDuration: 0.9
   PatrolPoints: []
 --- !u!114 &577789564
 MonoBehaviour:

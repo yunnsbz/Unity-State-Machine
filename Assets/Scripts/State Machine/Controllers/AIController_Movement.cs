@@ -2,6 +2,11 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
+/// <summary>
+/// AIController_Movement handles all navigation-based movement behaviors for an AI-controlled enemy,
+/// including patrolling, strafing, range adjustments, targeting, and investigating positions.
+/// It supports both static patrol points and dynamic roaming, and uses Unity's NavMesh system for pathfinding.
+/// </summary>
 public class AIController_Movement : MonoBehaviour
 {
     // values:
@@ -9,10 +14,11 @@ public class AIController_Movement : MonoBehaviour
     public float RangeMinDistance = 8f;
     public float RangeMaxDistance = 15f;
     private float RangeTakingSpeed = 2f;
-    private float RandomRangeRadius = 4f; // Düþmanýn dolaþabileceði maksimum yarýçap
+    private float RandomRangeRadius = 4f; // Max radius enemy can wander when trying to reposition within range
 
     [Header("patroling")]
-    public float RandomPatrolRadius = 9f; // Düþmanýn dolaþabileceði maksimum yarýçap
+    public float RandomPatrolRadius = 9f; // Max radius for random patrol movement
+    public float PatrolWaitDuration = 0.9f;
     public Transform[] PatrolPoints;
 
     private AIController Controller;
@@ -30,45 +36,34 @@ public class AIController_Movement : MonoBehaviour
     private void Awake()
     {
         Controller = GetComponent<AIController>();
-        PatrolWait = new WaitForSeconds(0.9f);
+        PatrolWait = new WaitForSeconds(PatrolWaitDuration);
     }
 
     private void OnDisable()
     {
-        if (C_Patrol != null)
+        // Stop all active coroutines and reset them
+        StopCoroutineSafe(ref C_Patrol);
+        StopCoroutineSafe(ref C_TakeRange);
+        StopCoroutineSafe(ref C_LookToTarget);
+        StopCoroutineSafe(ref C_Investigate);
+        StopCoroutineSafe(ref C_Strafe);
+        StopCoroutineSafe(ref C_Push);
+    }
+
+    private void StopCoroutineSafe(ref Coroutine coroutine)
+    {
+        if (coroutine != null)
         {
-            StopCoroutine(C_Patrol);
-            C_Patrol = null;
-        }
-        if (C_TakeRange != null)
-        {
-            StopCoroutine(C_TakeRange);
-            C_TakeRange = null;
-        }
-        if (C_LookToTarget != null)
-        {
-            StopCoroutine(C_LookToTarget);
-            C_LookToTarget = null;
-        }
-        if (C_Investigate != null)
-        {
-            StopCoroutine(C_Investigate);
-            C_Investigate = null;
-        }
-        if (C_Strafe != null)
-        {
-            StopCoroutine(C_Strafe);
-            C_Strafe = null;
-        }
-        if (C_Push != null)
-        {
-            StopCoroutine(C_Push);
-            C_Push = null;
+            StopCoroutine(coroutine);
+            coroutine = null;
         }
     }
 
+    #region Patrolling
 
-    /// <returns>patrol yapabiliyorsa true döndürür</returns>
+    /// <summary>
+    /// Starts patrolling between predefined points. Returns true if patrolling can begin.
+    /// </summary>
     public virtual bool StartPatrolling()
     {
         Controller.Agent.updateRotation = true;
@@ -85,6 +80,9 @@ public class AIController_Movement : MonoBehaviour
         else return false;
     }
 
+    /// <summary>
+    /// Starts random patrolling around a defined radius.
+    /// </summary>
     public virtual void StartRandomPatrol()
     {
         Controller.Agent.updateRotation = true;
@@ -104,6 +102,13 @@ public class AIController_Movement : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Range Management
+
+    /// <summary>
+    /// Adjusts position to maintain a distance within defined min and max range from the target.
+    /// </summary>
     public virtual void StartTakingRange(Transform target)
     {
         Controller.Agent.updateRotation = false;
@@ -166,8 +171,12 @@ public class AIController_Movement : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Target Look
+
     /// <summary>
-    /// ateþ ederken kullanýlýr. hedefe niþan almak için kullanýlýr
+    /// Starts smoothly rotating toward a target (used during shooting or aiming).
     /// </summary>
     public virtual void StartLookingToTarget(Transform target)
     {
@@ -186,8 +195,12 @@ public class AIController_Movement : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Investigation
+
     /// <summary>
-    /// hedefin en son görüldüðü noktaya gider
+    /// Moves to the last known position of the target (used when the target is lost).
     /// </summary>
     public virtual void StartInvestigateTarget(Vector3 TargetLastSeenPos)
     {
@@ -207,11 +220,13 @@ public class AIController_Movement : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Strafing
 
     /// <summary>
-    /// range'den çýkmadan hareket eder
+    /// Moves around the target while staying within range (used for tactical movement).
     /// </summary>
-    /// 
     public virtual void StartStrafing(Transform Target)
     {
         if (C_Strafe == null)
@@ -228,6 +243,10 @@ public class AIController_Movement : MonoBehaviour
             C_Strafe = null;
         }
     }
+
+    #endregion
+
+    #region Push / Force Move
 
     private IEnumerator GoToTarget(Vector3 TargetPos)
     {
@@ -249,6 +268,10 @@ public class AIController_Movement : MonoBehaviour
             C_Push = StartCoroutine(_PushToTarget(TargetPos));
         }
     }
+
+    #endregion
+
+    #region Core Movement Routines
 
     private IEnumerator _PushToTarget(Vector3 TargetPos)
     {
@@ -367,6 +390,10 @@ public class AIController_Movement : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Helper Methods
+
     private Vector3 GetStrafePosition(Transform Target)
     {
         float distance = 1.5f;
@@ -452,4 +479,5 @@ public class AIController_Movement : MonoBehaviour
         return Vector3.zero;
     }
 
+    #endregion
 }

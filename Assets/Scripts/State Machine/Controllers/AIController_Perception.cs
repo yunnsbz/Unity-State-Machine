@@ -1,31 +1,36 @@
 using System.Collections;
 using UnityEngine;
 
+
+/// <summary>
+/// This class handles the AI perception system for detecting and tracking targets.
+/// It includes visual perception with a line of sight check, range check, and search functionalities.
+/// </summary>
 public class AIController_Perception : MonoBehaviour
 {
-    // values:
-    public float PerceptionUpdateInterval = 0.05f;
-    public float PerceptionOnSightUpdateInterval = 0.5f;
-    public float MaxVisualPerceptionDistance = 20f;
-    public float ForwardViewAngle = 60;
+    // Values:
+    public float PerceptionUpdateInterval = 0.05f; // coroutine wait interval at which perception updates
+    public float PerceptionOnSightUpdateInterval = 0.5f; // coroutine wait interval when the target is in sight
+    public float MaxVisualPerceptionDistance = 20f; // Maximum distance at which the AI can perceive a target visually
+    public float ForwardViewAngle = 60; // The forward view angle in degrees 
 
-    // components:
+    // Components:
     private AIController Controller;
 
-    // coroutines:
+    // Coroutines:
     Coroutine Coroutine_LineofSight;
     Coroutine Coroutine_FolowTargetSight;
-    Coroutine Coroutine_SearchForTarget;
-    private WaitForSeconds Wait;
-    private WaitForSeconds WaitOnSight;
+    Coroutine Coroutine_SearchForTarget; 
+    private WaitForSeconds Wait; // Wait time for perception updates
+    private WaitForSeconds WaitOnSight; // Wait time when target is in sight
 
-    // raycast hit layers:
-    public LayerMask targetLayerMask;
-    public LayerMask nontargetLayerMask;
+    // Raycast hit layers:
+    public LayerMask targetLayerMask; // Layer mask for the target objects
+    public LayerMask nontargetLayerMask; // Layer mask for non-target objects (walls, obstacles, etc.)
 
-    // hedef:
-    public Transform TargetOnSight { get; set; }
-    public Vector3 TargetlastSeenPosition { get; set; }
+    // Target:
+    public Transform TargetOnSight { get; set; } // The target that is currently in sight
+    public Vector3 TargetlastKnownPosition { get; set; } // The last known position of the target
 
     private void Awake()
     {
@@ -53,15 +58,22 @@ public class AIController_Perception : MonoBehaviour
         }
     }
 
+    #region Start functions
+
+    /// <summary>
+    /// Starts looking for a target. It will either patrol or focus on the target depending on the state.
+    /// </summary>
     public virtual void StartLookingForTarget(bool IsPatrolling)
     {
         if (IsPatrolling)
         {
+            // Start the line of sight check for patrolling AI
             if (Coroutine_LineofSight == null)
                 Coroutine_LineofSight = StartCoroutine(CheckLineOfSight());
         }
         else
         {
+            // Increase the visual range and field of view for focused search
             MaxVisualPerceptionDistance *= 2;
             ForwardViewAngle = 80;
             if (Coroutine_LineofSight == null)
@@ -70,51 +82,53 @@ public class AIController_Perception : MonoBehaviour
     }
 
     /// <summary>
-    /// ranged saldýrýlar için ne çok yakýn ne çok uzak olmalý:
+    /// Starts following the target if it's within sight.
     /// </summary>
-    public virtual bool IsTargetInAttackRange()
-    {
-        // mesafe hesaplanýr ve max min range ile karþýlaþtýrýlýr
-        var distance = Vector3.Distance(TargetOnSight.position, transform.position);
-        if (distance < Controller.Movement.RangeMinDistance || distance > Controller.Movement.RangeMaxDistance)
-            return false;
-        else return true;
-    }
-
     public virtual void StartFollowingTargetSight()
     {
         if (Coroutine_FolowTargetSight == null)
             Coroutine_FolowTargetSight = StartCoroutine(FollowTargetSight(TargetOnSight));
     }
 
+    /// <summary>
+    /// Starts searching for the target if it's lost or not visible.
+    /// </summary>
     public virtual void StartSearchForTarget()
     {
         if (Coroutine_SearchForTarget == null)
             Coroutine_SearchForTarget = StartCoroutine(SearchForTarget());
     }
 
+    #endregion
+
+    #region coroutine functions
+
+    /// <summary>
+    /// Checks line of sight to potential targets in the area and updates the target on sight.
+    /// </summary>
     private IEnumerator CheckLineOfSight()
     {
         while (enabled)
         {
             for (int i = 0; i < Controller.Targetables.Count; i++)
             {
-                // mesafe kontrolü
+                // Distance check to see if the target is within visual range
                 if (Vector3.Distance(transform.position, Controller.Targetables[i].transform.position) <= MaxVisualPerceptionDistance)
                 {
                     var targetDir = CalculateTargetViewAngle(Controller.Targetables[i].transform);
-                    Vector3 origin = transform.position + Vector3.up; // Baþlangýç noktasý (yükseklik ayarý)
-                    // görüþ açýsý kontrolü
+                    Vector3 origin = transform.position + Vector3.up; // Starting point adjusted for height
+
+                    // View angle check
                     if (targetDir != Vector3.zero)
                     {
-                        // raycast ile duvar kontrolü
+                        // Raycast to check for obstacles between AI and target
                         if (Physics.Raycast(origin, targetDir, out RaycastHit TargetHit, MaxVisualPerceptionDistance, targetLayerMask))
                         {
-                            // Engelin hedefin önünde olup olmadýðýný kontrol et
+                            // Check if an obstacle is closer than the target
                             if (Physics.Raycast(origin, targetDir, out RaycastHit obstacleHit, MaxVisualPerceptionDistance, nontargetLayerMask))
                             {
 
-                                // Engel hedefe daha yakýnsa
+                                // If obstacle is closer than the target, it's blocking the view
                                 if (obstacleHit.distance > TargetHit.distance)
                                 {
                                     int index = i;
@@ -140,32 +154,12 @@ public class AIController_Perception : MonoBehaviour
         yield break;
     }
 
-    private Vector3 CalculateTargetViewAngle(Transform target)
-    {
-        if (target == null)
-            return Vector3.zero;
-
-        // Hedefe olan yön vektörünü hesapla
-        Vector3 hedefYonu = (target.position - transform.position).normalized;
-
-        // Ýleri yön ile hedef yönü arasýndaki açýyý dot product ile kontrol et
-        float dot = Vector3.Dot(transform.forward, hedefYonu);
-
-        // Görüþ açýsýnýn cosinüs deðerini hesapla
-        float gorusCos = Mathf.Cos(ForwardViewAngle * Mathf.Deg2Rad);
-
-        // Eðer dot deðeri görüþ açýsýnýn cosinüsünden büyükse hedef görüþ açýsýnda
-        if (dot >= gorusCos)
-            return hedefYonu;
-        else return Vector3.zero;
-    }
-
-    // hedefin son konumunu her iki kontrolde bir kaydetsin diye kullanýlýr
+    // Variable to track if the target's last seen position should be updated
     bool lastSeenCheck = true;
 
     /// <summary>
-    /// eðer hedef görüþ alanýndan çýkarsa IsTargetOnSight false olur
-    /// </summary> 
+    /// Follows the target's position and updates the last seen position.
+    /// </summary>
     private IEnumerator FollowTargetSight(Transform Target)
     {
         if (Target == null)
@@ -179,40 +173,39 @@ public class AIController_Perception : MonoBehaviour
         var distance = MaxVisualPerceptionDistance * 2;
         while (enabled)
         {
-            // buraya her geldiðinde son konumu kaydetmesi çok hýzlý oluyor bu yüzden her iki geliþte bir son konumu kaydetsin diye lastSeenCheck deðiþkenini bu þekilde kullandým
+            // Save the last known position of the target every other iteration
             if (lastSeenCheck)
             {
-                TargetlastSeenPosition = Target.position;
+                TargetlastKnownPosition = Target.position;
                 lastSeenCheck = false;
             }
             else lastSeenCheck = true;
 
 
-            // raycast ile duvar kontrolü
-            Vector3 origin = transform.position + Vector3.up; // Baþlangýç noktasý (yükseklik ayarý)
+            // Raycast to check for obstacles between AI and target
+            Vector3 origin = transform.position + Vector3.up; // Starting point adjusted for height
             var targetDir = (Target.transform.position - transform.position);
 
-            // Engelin hedefin önünde olup olmadýðýný kontrol et
+            // Check if an obstacle is blocking the target
             if (Physics.Raycast(origin, targetDir, out RaycastHit obstacleHit, distance, nontargetLayerMask))
             {
                 var TargetDistance = (Target.transform.position - transform.position);
 
-                // Engel hedefe daha yakýnsa
+                // If the obstacle is closer than the target, stop following
                 if (obstacleHit.distance < TargetDistance.magnitude)
                 {
                     if (checkAgain)
                     {
-                        // son kaybettiðin yerden tekrar kontrol et
+                        // Recheck from the last seen position
                         if (Physics.Raycast(origin, targetDir, out obstacleHit, distance, nontargetLayerMask))
                         {
                             TargetDistance = (Target.transform.position - transform.position);
 
-                            // Engel hedefe daha yakýnsa
+                            // If the obstacle is still closer, stop following the target
                             if (obstacleHit.distance < TargetDistance.magnitude)
                             {
                                 lastSeenCheck = true;
-                                // target lost:
-                                TargetOnSight = null;
+                                TargetOnSight = null; // target lost
                                 Coroutine_FolowTargetSight = null;
                                 yield break;
                             }
@@ -229,7 +222,9 @@ public class AIController_Perception : MonoBehaviour
         yield break;
     }
 
-
+    /// <summary>
+    /// Searches for the target by checking all possible targets within range and line of sight.
+    /// </summary>
     private IEnumerator SearchForTarget()
     {
         for (int i = 0; i < Controller.Targetables.Count; i++)
@@ -237,17 +232,17 @@ public class AIController_Perception : MonoBehaviour
             var distance = MaxVisualPerceptionDistance * 3;
             while (enabled)
             {
-                // raycast ile duvar kontrolü
-                Vector3 origin = transform.position + Vector3.up; // Baþlangýç noktasý (yükseklik ayarý)
+                // Raycast to check for obstacles between AI and target
+                Vector3 origin = transform.position + Vector3.up; // Starting point adjusted for height
                 var targetDir = (Controller.Targetables[i].transform.position - transform.position);
 
-                // Engelin hedefin önünde olup olmadýðýný kontrol et
+                // Check if an obstacle is blocking the target's sight
                 RaycastHit obstacleHit;
                 if (Physics.Raycast(origin, targetDir, out obstacleHit, distance, nontargetLayerMask))
                 {
                     var TargetDistance = (Controller.Targetables[i].transform.position - transform.position);
 
-                    //  hedef Engelden daha yakýnsa
+                    // If the obstacle is further than the target, the AI can see the target
                     if (obstacleHit.distance > TargetDistance.magnitude)
                     {
                         int index = i;
@@ -261,4 +256,45 @@ public class AIController_Perception : MonoBehaviour
         }
         yield break;
     }
+
+    #endregion
+
+    #region Helper functions
+
+    /// <summary>
+    /// Checks if the target is within the attack range based on minimum and maximum range distances.
+    /// </summary>
+    public virtual bool IsTargetInAttackRange()
+    {
+        // mesafe hesaplanýr ve max min range ile karþýlaþtýrýlýr
+        var distance = Vector3.Distance(TargetOnSight.position, transform.position);
+        if (distance < Controller.Movement.RangeMinDistance || distance > Controller.Movement.RangeMaxDistance)
+            return false;
+        else return true;
+    }
+
+    /// <summary>
+    /// Calculates the angle between the AI's forward direction and the target's direction to check if the target is within view angle.
+    /// </summary>
+    private Vector3 CalculateTargetViewAngle(Transform target)
+    {
+        if (target == null)
+            return Vector3.zero;
+
+        // Calculate direction to the target
+        Vector3 hedefYonu = (target.position - transform.position).normalized;
+
+        // Check the dot product between AI's forward vector and the target direction to determine if the target is within the view angle
+        float dot = Vector3.Dot(transform.forward, hedefYonu);
+
+        // Calculate cosine of the view angle
+        float gorusCos = Mathf.Cos(ForwardViewAngle * Mathf.Deg2Rad);
+
+        // If the dot value is greater than the cosine of the view angle, the target is within the AI's field of view
+        if (dot >= gorusCos)
+            return hedefYonu;
+        else return Vector3.zero;
+    }
+
+    #endregion
 }
