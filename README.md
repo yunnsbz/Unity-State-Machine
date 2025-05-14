@@ -44,9 +44,12 @@ The project's scripts file structure is as follows:
 3. **Open in Unity:** Open the cloned project using Unity Hub.
 
 4. Set Up the Scene:
-- Create an AI entity (GameObject) and add the AIController and a NavMeshAgent component.
-- Add controllers (Movement, Perception, Attack) and connect them to the AIController.
-
+    - Create an enemy entity (GameObject): add the Entity, AIController and a NavMeshAgent component.
+    - set the layer to ```Enemy```.
+    - Add controllers (Movement, Perception, Attack) and connect them to the AIController.
+    - set target (```Player```) and non-target (```Default, Enemy```) layers for the perception controller.
+    - Create a player entity (GameObject): add the Entity and the PlayerController scripts.
+    - set the layer to ```Player```.
 7. Configure States: Customize AI behaviors using the states defined in the AIStates folder.
 
 <br>
