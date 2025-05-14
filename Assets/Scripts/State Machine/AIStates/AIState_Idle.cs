@@ -8,7 +8,7 @@ public class AIState_Idle : AIState
 
     public override void EnterState()
     {
-        // patrol yapabiliyor mu yapamýyor mu: eðer yapamýyorsa daha büyük bir algýlama mesafesi olur:
+        // can patrol normaly: if not will have a bigger perception distance
         var PatrolResult = controller.Movement.StartPatrolling();
         controller.Perception.StartLookingForTarget(PatrolResult);
     }
