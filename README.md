@@ -2,11 +2,16 @@
 
 This project is a modular **state machine** system designed for managing AI behaviors in the Unity game engine. It includes various AI states (e.g., Idle, Attack, SearchForTarget, TakeRange) and control mechanisms (e.g., Movement, Attack, Perception) to create flexible and reusable AI behavior systems for game developers.
 
-## Features
-- **Modular States:** Defines different states for AI entities (Idle, Attack, SearchForTarget, TakeRange).
-- **Control Systems:** Manages AI behaviors with controllers for Movement, Attack, and Perception.
-- **Easy Integration:** Easily integrable and customizable within Unity projects.
-- **Flexible Architecture:** Allows adding new states and controllers with minimal effort.
+<br>
+
+## Features and Todos:
+- [x] **Built-in States:** Defines different states for AI entities (Idle, Attack, SearchForTarget, TakeRange).
+- [x] **Control Systems:** Manages AI behaviors with controllers for Movement, Attack, and Perception.
+- [x] **Easy Integration:** Easily integrable and customizable within Unity projects.
+- [x] **Flexible Architecture:** Allows adding new states and controllers with minimal effort.
+- [ ] Modular States: change the states in the inspector without writhing any code
+
+<br>
 
 ## File Structure
 The project's scripts file structure is as follows:
@@ -29,7 +34,7 @@ The project's scripts file structure is as follows:
  │   │   ├── AIController_Perception.cs
 ```
 
-
+<br>
 
 ## Installation and Setup
 1. **Unity Version:** The project has been tested with Unity 2021.3.
@@ -44,8 +49,12 @@ The project's scripts file structure is as follows:
 
 7. Configure States: Customize AI behaviors using the states defined in the AIStates folder.
 
+<br>
+
 ## Usage
 1. Run the game. Use ```W A S D``` keys to control player character and observe the enemy AI behavior.
+
+<br>
 
 ## Contributing
 If you'd like to contribute to this project:
@@ -56,7 +65,7 @@ If you'd like to contribute to this project:
 
 3. Make your changes and submit a pull request.
 
+<br>
+
 ## License
 This project is licensed under the MIT LICENSE. See the LICENSE file for details.
-
-
