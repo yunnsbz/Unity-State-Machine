@@ -6,6 +6,7 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     public float moveSpeed = 5f;
+    public float rotationSpeed = 10f;
 
     private CharacterController controller;
     private Vector3 moveDirection;
@@ -21,6 +22,13 @@ public class PlayerController : MonoBehaviour
         float moveZ = Input.GetAxisRaw("Vertical");   // W/S
 
         moveDirection = new Vector3(moveX, 0f, moveZ).normalized;
+
+        if (moveDirection.magnitude >= 0.1f)
+        {
+            // rotation
+            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+        }
 
         controller.Move(moveDirection * moveSpeed * Time.deltaTime);
     }
