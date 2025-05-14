@@ -9,10 +9,11 @@ This project is a modular **state machine** system designed for managing AI beha
 - **Flexible Architecture:** Allows adding new states and controllers with minimal effort.
 
 ## File Structure
-The project's core file structure is as follows:
-```
+The project's scripts file structure is as follows:
+``` python
 📁Scripts
- ├── Entity.cs  
+ ├── Entity.cs
+ ├── PlayerController.cs
  │  📁StateMachine
  │   ├── AIController.cs              
  │   ├── State.cs                     
@@ -30,25 +31,21 @@ The project's core file structure is as follows:
 
 
 
-## Installation
+## Installation and Setup
 1. **Unity Version:** The project has been tested with Unity 2021.3.
 2. **Clone the Repository:**
    ```bash
    https://github.com/yunnsbz/Unity-State-Machine.git
-5. **Open in Unity:** Open the cloned project using Unity Hub.
+3. **Open in Unity:** Open the cloned project using Unity Hub.
 
-6. Set Up the Scene: Create an AI entity (GameObject) and add the AIController component.
+4. Set Up the Scene:
+- Create an AI entity (GameObject) and add the AIController and a NavMeshAgent component.
+- Add controllers (Movement, Perception, Attack) and connect them to the AIController.
 
 7. Configure States: Customize AI behaviors using the states defined in the AIStates folder.
 
 ## Usage
-1. Create an AI Entity: Create a GameObject and attach the Entity script.
-
-2. Add AIController: Attach the AIController component to the same GameObject.
-
-3. Assign States: In the AIController component, specify the states (e.g., AIState_Idle, AIState_Attack) for the AI to use.
-
-4. Test: Run the game and observe the AI behavior.
+1. Run the game. Use ```W A S D``` keys to control player character and observe the enemy AI behavior.
 
 ## Contributing
 If you'd like to contribute to this project:
